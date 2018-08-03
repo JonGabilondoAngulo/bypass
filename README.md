@@ -1,5 +1,5 @@
 # bypass
-OS X command line tool to inject Frameworks on iOS App (ipa files). It does the injection of the framework and the codesigning. It can be used to codesign Apps only.
+OS X command line tool to inject Frameworks on iOS App (ipa files). It does the injection of the framework and the codesigning. It can be used to codesign Apps only as well.
 
 ## Build
 Open the bypass.xcodeproj and build it. The result is a command line tool called "bypass".
