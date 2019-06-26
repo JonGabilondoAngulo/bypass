@@ -70,9 +70,9 @@ int deployToNewIPAtoDestination(const boost::filesystem::path & inputIPAPath,
             }
         } else {
             // Add Codesigned suffix to name is it has not.
-            if (newAppName.find("Codesigned") == std::string::npos) {
+            if (newAppName.find("codesigned") == std::string::npos) {
                 newAppName = originalIPAfilename.replace_extension("").string();
-                newAppName += "-Codesigned.ipa";
+                newAppName += "-codesigned.ipa";
             }
         }
         ORGLOG_V((std::string)"Final ipa name: " + newAppName);

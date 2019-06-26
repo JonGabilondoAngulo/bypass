@@ -26,7 +26,7 @@ int copy_folder(const boost::filesystem::path & sourceDirPath, const boost::file
     
     // Delete destination folder
     boost::filesystem::path newFolderPath(destDirPath);
-    newFolderPath.append(hpmcJSFolder);
+    newFolderPath.append(JSFolder);
     if (boost::filesystem::exists(newFolderPath)) {
         boost::system::error_code error;
         boost::filesystem::remove_all(newFolderPath, error);

@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 47;
+	objectVersion = 51;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -176,10 +176,11 @@
 				ORGANIZATIONNAME = Organismo;
 			};
 			buildConfigurationList = 0373D0C919D99D5400754E1D /* Build configuration list for PBXProject "bypass" */;
-			compatibilityVersion = "Xcode 6.3";
+			compatibilityVersion = "Xcode 10.0";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 			);
 			mainGroup = 0373D0C519D99D5400754E1D;
