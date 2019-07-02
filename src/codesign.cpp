@@ -225,7 +225,7 @@ std::string resource_rules_file(bool forceResRules,
             boost::filesystem::path resourceRulesFile = tempDirPath;
             resourceRulesFile.append("ResourceRules.plist");
             
-            if (createFile(resourceRulesFile, sResourceRulesTemplate, true)) {
+            if (create_file(resourceRulesFile, sResourceRulesTemplate, true)) {
                 ORGLOG_V("Codesign using general resource rules file :" << resourceRulesFile);
                 resRulesFile = resourceRulesFile.string();
             }

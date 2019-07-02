@@ -43,6 +43,47 @@ int repack( const boost::filesystem::path & unpackedAppPath,
     return system((const char*)systemCmd.c_str());
 }
 
+int deployToNewAppToDestination(const boost::filesystem::path & appPath,
+                                const boost::filesystem::path & originalAppPath,
+                                const std::string & newAppName,
+                                const boost::filesystem::path & newDestinationFolderPath,
+                                boost::filesystem::path & outNewAppPath)
+{
+    boost::filesystem::path finalAppPath;
+    std::string appName;
+    
+    // Generating new ipa file name
+    if (!newAppName.empty()) {
+        appName = newAppName; // user wants a new name
+        ORGLOG_V((std::string)"Final app will have the name: " + appName.c_str());
+    } else {
+        boost::filesystem::path originalAppfilename = originalAppPath.filename();
+        appName = originalAppfilename.string(); // In the simplest case this will be the final name
+        ORGLOG_V((std::string)"Final app name: " + appName);
+    }
+    
+    // Generating new app file path
+    if (!newDestinationFolderPath.empty()) {
+        finalAppPath = newDestinationFolderPath / appName;
+    } else {
+        finalAppPath = originalAppPath;
+        finalAppPath.remove_filename().append(appName);
+    }
+ 
+    outNewAppPath = finalAppPath;
+
+    if (boost::filesystem::exists(finalAppPath)) {
+        ORGLOG((std::string)"The destination file already exists. Please remove it before running bypass. " + finalAppPath.c_str());
+        return -1;
+    }
+         
+    // Moving new app to its new path
+    ORGLOG_V( (std::string)"Moving app to destination: " + finalAppPath.string());
+    std::string systemCmd = "mv -f " + (std::string)appPath.c_str() + (std::string)" \"" + finalAppPath.string() + "\"";
+    int err = system(systemCmd.c_str());
+    
+    return err;
+}
 
 int deployToNewIPAtoDestination(const boost::filesystem::path & inputIPAPath,
                                 const boost::filesystem::path & originalIPAPath,

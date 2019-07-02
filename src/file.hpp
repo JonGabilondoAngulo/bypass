@@ -10,6 +10,9 @@
 
 #include <stdio.h>
 
-bool createFile(const boost::filesystem::path & filePath, const std::string & content, bool removeFirst);
+bool create_file(const boost::filesystem::path & filePath, const std::string & content, bool removeFirst);
+bool file_is_app(const boost::filesystem::path & filePath);
+bool file_is_ipa(const boost::filesystem::path & filePath);
+bool file_is_mac_app(const boost::filesystem::path & filePath);
 
 #endif /* file_hpp */

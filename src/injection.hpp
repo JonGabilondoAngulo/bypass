@@ -11,6 +11,6 @@
 #include <stdio.h>
 
 void inject_dylib(FILE* newFile, uint32_t top, const boost::filesystem::path& dylibPath);
-int patch_binary(const boost::filesystem::path & binaryPath, const boost::filesystem::path & dllPath, bool isFramework);
+int patch_binary(const boost::filesystem::path & binaryPath, const boost::filesystem::path & dllPath, bool isFramework, bool isMacFile);
 
 #endif /* injection_hpp */

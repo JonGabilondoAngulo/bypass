@@ -162,7 +162,7 @@
 			dependencies = (
 			);
 			name = bypass;
-			productName = HPMCEnabler;
+			productName = bypass;
 			productReference = 0373D0CE19D99D5400754E1D /* bypass */;
 			productType = "com.apple.product-type.tool";
 		};

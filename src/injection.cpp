@@ -27,14 +27,7 @@ void inject_dylib(FILE* newFile, uint32_t top, const boost::filesystem::path& dy
     mach.ncmds += 1;
     uint32_t current_sizeofcmds = mach.sizeofcmds;
     mach.sizeofcmds += dylib_size;
-    
-//    if (mach.magic == MH_MAGIC_64) {
-//        uint32_t endOfComamndsPos = top + sizeof(struct mach_header) + sizeofcmds;
-//        if (endOfComamndsPos % sizeof(long)) {
-//            sizeofcmds += endOfComamndsPos % sizeof(long);
-//        }
-//    }
-    
+        
     // 3. Modify the mac header
     //fseek(newFile, -sizeof(struct mach_header), SEEK_CUR); // back to slice top
     fseek(newFile, top, SEEK_SET); // go to slice start
@@ -98,7 +91,7 @@ void inject_dylib(FILE* newFile, uint32_t top, const boost::filesystem::path& dy
 #endif
 }
 
-int patch_binary(const boost::filesystem::path & binaryPath, const boost::filesystem::path & dllPath, bool isFramework)
+int patch_binary(const boost::filesystem::path & binaryPath, const boost::filesystem::path & dllPath, bool isFramework, bool isMacApp)
 {
     ORGLOG("Patching app binary");
     
@@ -108,9 +101,13 @@ int patch_binary(const boost::filesystem::path & binaryPath, const boost::filesy
     if (isFramework) {
         boost::filesystem::path frameworkName = dllPath.filename();
         boost::filesystem::path frameworkNameNoExt = dllPath.filename().replace_extension("");
-        dylibPath = boost::filesystem::path("@rpath").append(frameworkName.string()).append(frameworkNameNoExt.string());
+        if (isMacApp) {
+            dylibPath = boost::filesystem::path("@executable_path") / ".." / "Frameworks" / frameworkName / "Versions" / "A" / frameworkNameNoExt; // Can't make it work with @rpath. look at run search paths in xcode.
+        } else {
+            dylibPath = boost::filesystem::path("@rpath") / frameworkName / frameworkNameNoExt;
+        }
     } else {
-        dylibPath = boost::filesystem::path("@executable_path").append(dllName.string());
+        dylibPath = boost::filesystem::path("@executable_path") / dllName;
     }
     
     char buffer[4096];
