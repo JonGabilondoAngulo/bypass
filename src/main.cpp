@@ -12,6 +12,7 @@
 #include "plist.hpp"
 
 
+
 int main(int argc, const char * argv[])
 {
     int err                     = 0;
@@ -193,9 +194,13 @@ int main(int argc, const char * argv[])
     //------
     
     if (doInjectFramework) {
-        
         ORGLOG("Injecting framework");
         
+        err = inject_framework(appPath, argFrameworkPath, input_file_is_mac);
+        if (err) {
+            goto CLEAN_EXIT;
+        }
+        /*
         std::string space = " ";
         std::string quote = "\"";
         boost::filesystem::path frameworksFolderPath = appPath;
@@ -247,7 +252,7 @@ int main(int argc, const char * argv[])
             ORGLOG("Failed retrieving app binary file name");
             err = ERR_Injection_Failed;
             goto CLEAN_EXIT;
-        }
+        }*/
     }
     
     //------
@@ -255,10 +260,14 @@ int main(int argc, const char * argv[])
     //------
     
     if (doResign) {
-        
         ORGLOG("Codesigning app ...");
+        err = codesign_app(appPath, argProvisionPath,  argResourceRulesPath, argCertificatePath, argEntitlementsPath, tempDirectoryPath, removeEntitlements, removeCodeSignature, input_file_is_ipa, input_file_is_mac, copyEntitlements, useResourceRules, forceResRules, useOriginalResRules, useGenericResRules);
         
-        {
+        if (err) {
+            goto CLEAN_EXIT;
+        }
+        
+        /*{
             if (!argProvisionPath.empty()) {
                 err = copy_provision_file(appPath, argProvisionPath);
                 if (err) {
@@ -358,7 +367,7 @@ int main(int argc, const char * argv[])
                 ORGLOG("Codesigning app failed.");
                 goto CLEAN_EXIT;
             }
-        }
+        }*/
     }
     
     if (input_file_is_ipa) {
@@ -382,7 +391,7 @@ int main(int argc, const char * argv[])
         boost::filesystem::path newAppPath;
         int err = deployToNewAppToDestination(appPath, argInputFilePath, argNewName.c_str(), argDestinationPath, newAppPath);
         if (err) {
-            ORGLOG("Failed to move the new ipa to destination: " << newAppPath);
+            ORGLOG("Failed to move the new app to destination: " << newAppPath);
         } else {
             ORGLOG("SUCCESS!");
             ORGLOG("New App path: " << newAppPath);

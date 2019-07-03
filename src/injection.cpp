@@ -5,15 +5,71 @@
 //  Created by Jon Gabilondo on 3/15/17.
 //
 #include "injection.hpp"
+#include "packaging.hpp"
+#include "plist.hpp"
 
 #define DYLIB_CURRENT_VER 0x10000
 #define DYLIB_COMPATIBILITY_VERSION 0x10000
 #define swap32(value) (((value & 0xFF000000) >> 24) | ((value & 0x00FF0000) >> 8) | ((value & 0x0000FF00) << 8) | ((value & 0x000000FF) << 24) )
 #define INJECT_BEFORE_CODE_SIGNATURE 0
 
+int inject_framework(const boost::filesystem::path &appPath, const boost::filesystem::path &argFrameworkPath, bool input_file_is_mac)
+{
+    int err = 0;
+    std::string space = " ";
+    std::string quote = "\"";
+    boost::filesystem::path frameworksFolderPath = appPath;
+    if (input_file_is_mac) {
+        frameworksFolderPath.append("Contents"); // os x
+    }
+    frameworksFolderPath.append("Frameworks");
+    
+    // Create destination folder.
+    if (boost::filesystem::exists(frameworksFolderPath) == false) {
+        if (!boost::filesystem::create_directory(frameworksFolderPath)) {
+            ORGLOG("Error creating JS Framework folder in the IPA: " << frameworksFolderPath);
+            return ERR_General_Error;
+        }
+    }
+    
+    std::string systemCmd = "cp -a " + quote + (std::string)argFrameworkPath.c_str() + quote + space + quote + frameworksFolderPath.c_str() + quote;
+    ORGLOG_V("Copying framework into app. " + systemCmd);
+    err = system((const char*)systemCmd.c_str());
+    if (err) {
+        ORGLOG("Failed copying the framework into the app.");
+        return ERR_General_Error;
+    }
+    
+    boost::filesystem::path pathToInfoplist = appPath;
+    if (input_file_is_mac) {
+        pathToInfoplist.append("Contents"); // os x
+    }
+    pathToInfoplist.append("Info.plist");
+    
+    std::string binaryFileName = get_app_binary_file_name(pathToInfoplist);
+    
+    if (!binaryFileName.empty())  {
+        boost::filesystem::path pathToAppBinary = appPath;
+        if (input_file_is_mac) {
+            pathToAppBinary.append("Contents"); // os x
+            pathToAppBinary.append("MacOS"); // os x
+        }
+        pathToAppBinary.append(binaryFileName);
+        
+        err = patch_binary(pathToAppBinary, argFrameworkPath, true, input_file_is_mac);
+        if (err) {
+            ORGLOG("Failed patching app binary");
+            return ERR_Injection_Failed;
+        }
+    } else {
+        ORGLOG("Failed retrieving app binary file name");
+        return ERR_Injection_Failed;
+    }
+    return err;
+}
+
 void inject_dylib(FILE* newFile, uint32_t top, const boost::filesystem::path& dylibPath)
 {
-    
     // 1. Seek Slice start
     fseek(newFile, top, SEEK_SET); // go to slice start
     struct mach_header mach;
@@ -42,7 +98,6 @@ void inject_dylib(FILE* newFile, uint32_t top, const boost::filesystem::path& dy
     } else {
         fseek(newFile, sizeof(struct mach_header)+current_sizeofcmds, SEEK_CUR); // go to the end of last command
     }
-    
     
 #if INJECT_BEFORE_CODE_SIGNATURE
     // 5. Get LC_CODE_SIGNATURE to write it at the end later

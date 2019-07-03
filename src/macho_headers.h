@@ -120,8 +120,7 @@ struct mach_header_64 {
  * LC_REEXPORT_DYLIB) for each library it uses.
  */
 struct dylib_command {
-    uint32_t	cmd;		/* LC_ID_DYLIB, LC_LOAD_{,WEAK_}DYLIB,
-                             LC_REEXPORT_DYLIB */
+    uint32_t	cmd;		/* LC_ID_DYLIB, LC_LOAD_{,WEAK_}DYLIB,  LC_REEXPORT_DYLIB */
     uint32_t	cmdsize;	/* includes pathname string */
     struct dylib	dylib;		/* the library identification */
 };
