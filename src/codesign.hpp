@@ -12,7 +12,7 @@
 
 // Codesign functions
 
-int codesign_app(const boost::filesystem::path &appPath, const boost::filesystem::path &argProvisionPath, const boost::filesystem::path & argResourceRulesPath, const boost::filesystem::path &argCertificatePath, const boost::filesystem::path &argEntitlementsPath, const boost::filesystem::path &tempDirectoryPath, bool removeEntitlements, bool removeCodeSignature, bool input_file_is_ipa, bool input_file_is_mac, bool copyEntitlements, bool useResourceRules, bool forceResRules, bool useOriginalResRules, bool useGenericResRules);
+int codesign_app(const boost::filesystem::path &appPath, const boost::filesystem::path &provisionPath, const boost::filesystem::path & resourceRulesPath, const boost::filesystem::path &certificatePath, const boost::filesystem::path &entitlementsPath, const boost::filesystem::path &tempDirectoryPath, bool removeEntitlements, bool removeCodeSignature, bool input_file_is_ipa, bool input_file_is_mac, bool copyEntitlements, bool useResourceRules, bool forceResRules, bool useOriginalResRules, bool useGenericResRules);
 
 bool codesign_dylib(const boost::filesystem::path & appPath, const std::string& dllName, const boost::filesystem::path& certificateFilePath, const boost::filesystem::path& entitlementsFilePath);
 bool codesign_at_path(const boost::filesystem::path & appPath, const boost::filesystem::path&  certificateFilePath, const boost::filesystem::path&  entitlementsFilePath);

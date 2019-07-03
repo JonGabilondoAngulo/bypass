@@ -195,64 +195,10 @@ int main(int argc, const char * argv[])
     
     if (doInjectFramework) {
         ORGLOG("Injecting framework");
-        
         err = inject_framework(appPath, argFrameworkPath, input_file_is_mac);
         if (err) {
             goto CLEAN_EXIT;
         }
-        /*
-        std::string space = " ";
-        std::string quote = "\"";
-        boost::filesystem::path frameworksFolderPath = appPath;
-        if (input_file_is_mac) {
-            frameworksFolderPath.append("Contents"); // os x
-        }
-        frameworksFolderPath.append("Frameworks");
-        
-        // Create destination folder.
-        if (boost::filesystem::exists(frameworksFolderPath) == false) {
-            if (!boost::filesystem::create_directory(frameworksFolderPath)) {
-                ORGLOG("Error creating JS Framework folder in the IPA: " << frameworksFolderPath);
-                return ERR_General_Error;
-            }
-        }
-            
-        ORGLOG_V("Copying framework into app. " + systemCmd);
-        systemCmd = "cp -a " + quote + (std::string)argFrameworkPath.c_str() + quote + space + quote + frameworksFolderPath.c_str() + quote;
-        err = system((const char*)systemCmd.c_str());
-        if (err) {
-            ORGLOG("Failed copying the framework into the app.");
-            err = ERR_General_Error;
-            goto CLEAN_EXIT;
-        }
-        
-        boost::filesystem::path pathToInfoplist = appPath;
-        if (input_file_is_mac) {
-            pathToInfoplist.append("Contents"); // os x
-        }
-        pathToInfoplist.append("Info.plist");
-
-        std::string binaryFileName = get_app_binary_file_name(pathToInfoplist);
-        
-        if (!binaryFileName.empty())  {
-            boost::filesystem::path pathToAppBinary = appPath;
-            if (input_file_is_mac) {
-                pathToAppBinary.append("Contents"); // os x
-                pathToAppBinary.append("MacOS"); // os x
-            }
-            pathToAppBinary.append(binaryFileName);
-
-            err = patch_binary(pathToAppBinary, argFrameworkPath, true, input_file_is_mac);
-            if (err) {
-                ORGLOG("Failed patching app binary");
-                err = ERR_Injection_Failed;
-                goto CLEAN_EXIT;
-            }
-        } else {
-            ORGLOG("Failed retrieving app binary file name");
-            err = ERR_Injection_Failed;
-            goto CLEAN_EXIT;
-        }*/
     }
     
     //------
@@ -266,110 +212,11 @@ int main(int argc, const char * argv[])
         if (err) {
             goto CLEAN_EXIT;
         }
-        
-        /*{
-            if (!argProvisionPath.empty()) {
-                err = copy_provision_file(appPath, argProvisionPath);
-                if (err) {
-                    err = ERR_General_Error;
-                    goto CLEAN_EXIT;
-                }
-            }
-            
-            if (removeEntitlements) {
-                err = remove_entitlements(appPath);
-            }
-            
-            if (removeCodeSignature) {
-                err = remove_codesign(appPath);
-            }
-            
-            systemCmd = (std::string)"/usr/bin/codesign -f --deep -s '" + (std::string)argCertificatePath.c_str() + (std::string)"' " ;
-            
-            // Entitlements
-            boost::filesystem::path entitlementsFilePath;
-            if (input_file_is_ipa) {
-                // Important entitlements info:
-                // no entitlements provided in arguments, extract them from mobile provision
-                // the provision file could be given in argument, if not extract it from the embeded.mobileprovision
-                // if no embeded.mobileprovision then we can't do anything .. the codesign willprobably not build a good ipa, this will be more visible in 8.1.3
-                
-                if (copyEntitlements) {
-                    entitlementsFilePath = argEntitlementsPath;
-                } else {
-                    std::string pathToProvision;
-                    
-                    if (!argProvisionPath.empty()) {
-                        pathToProvision = argProvisionPath.c_str();
-                    } else {
-                        pathToProvision = appPath.string() + "/" + "embedded.mobileprovision";
-                    }
-                    
-                    if (boost::filesystem::exists(pathToProvision)) {
-                        err = extract_entitlements_from_mobile_provision(pathToProvision, entitlementsFilePath, tempDirectoryPath);
-                    }
-                }
-                if (!entitlementsFilePath.empty()) {
-                    ORGLOG_V("Codesign using entitlements. " << entitlementsFilePath);
-                    systemCmd += (std::string)" --entitlements='" + entitlementsFilePath.string() + "'";
-                } else {
-                    ORGLOG("Failed to extract entitlements from provision file, codesign will not use entitlements.");
-                }
-            }
-            
-            // Resource rules
-            std::string resRulesFile;
-            if (useResourceRules) {
-                resRulesFile = argResourceRulesPath.c_str();
-            } else {
-                resRulesFile = resource_rules_file(forceResRules, useOriginalResRules, useGenericResRules, appPath, tempDirectoryPath);
-            }
-            
-            if (resRulesFile.length()) {
-                ORGLOG_V("Codesign using resource rules file :" << (std::string)resRulesFile);
-                systemCmd += (std::string)" --resource-rules='" + resRulesFile + "'";
-            }
-            
-            systemCmd += " \"" + appPath.string() + "\"";
-            
-            // Codesign dylibs
-            if (codesign_at_path(appPath, argCertificatePath, entitlementsFilePath)) {
-                ORGLOG_V("Dylibs codesign sucessful!");
-            } else {
-                err = ERR_Dylib_Codesign_Failed;
-                ORGLOG("Codesigning one or more dylibs failed");
-            }
-            
-            // Codesigning extensions under plugins folder
-            boost::filesystem::path extensionsFolderPath = appPath;
-            extensionsFolderPath.append("PlugIns");
-            if (codesign_at_path(extensionsFolderPath, argCertificatePath, entitlementsFilePath)) {
-                ORGLOG_V("Extensions codesign sucessful!");
-            }
-            
-            // Codesigning frameworks
-            boost::filesystem::path frameworksFolderPath = appPath;
-            if (input_file_is_mac) {
-                frameworksFolderPath.append("Contents"); // os x
-            }
-            frameworksFolderPath.append("Frameworks");
-            if (codesign_at_path(frameworksFolderPath, argCertificatePath, entitlementsFilePath)) {
-                ORGLOG_V("Frameworks codesign sucessful!");
-            }
-            
-            // silence output
-            //systemCmd += " " + silenceCmdOutput;
-            
-            // execute codesign
-            err = system((const char*)systemCmd.c_str());
-            if (err) {
-                err = ERR_App_Codesign_Failed;
-                ORGLOG("Codesigning app failed.");
-                goto CLEAN_EXIT;
-            }
-        }*/
     }
     
+    //------
+    // Deploy to destination
+    //------
     if (input_file_is_ipa) {
         // Repack instrumented ipa
         err = repack(tempDirectoryPath, repackedAppPath);

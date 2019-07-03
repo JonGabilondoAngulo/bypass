@@ -35,13 +35,13 @@ const std::string sResourceRulesTemplate = "<?xml version=\"1.0\" encoding=\"UTF
 
 #pragma mark - Codesign functions
 
-int codesign_app(const boost::filesystem::path &appPath, const boost::filesystem::path &argProvisionPath, const boost::filesystem::path & argResourceRulesPath, const boost::filesystem::path &argCertificatePath, const boost::filesystem::path &argEntitlementsPath, const boost::filesystem::path &tempDirectoryPath, bool removeEntitlements, bool removeCodeSignature, bool input_file_is_ipa, bool input_file_is_mac, bool copyEntitlements, bool useResourceRules, bool forceResRules, bool useOriginalResRules, bool useGenericResRules)
+int codesign_app(const boost::filesystem::path &appPath, const boost::filesystem::path &provisionPath, const boost::filesystem::path & resourceRulesPath, const boost::filesystem::path &certificatePath, const boost::filesystem::path &entitlementsPath, const boost::filesystem::path &tempDirectoryPath, bool removeEntitlements, bool removeCodeSignature, bool input_file_is_ipa, bool input_file_is_mac, bool copyEntitlements, bool useResourceRules, bool forceResRules, bool useOriginalResRules, bool useGenericResRules)
 {
     int err = 0;
     std::string systemCmd;
     
-    if (!argProvisionPath.empty()) {
-        err = copy_provision_file(appPath, argProvisionPath);
+    if (!provisionPath.empty()) {
+        err = copy_provision_file(appPath, provisionPath);
         if (err) {
             return ERR_General_Error;
         }
@@ -55,7 +55,7 @@ int codesign_app(const boost::filesystem::path &appPath, const boost::filesystem
         err = remove_codesign(appPath);
     }
     
-    systemCmd = (std::string)"/usr/bin/codesign -f --deep -s '" + (std::string)argCertificatePath.c_str() + (std::string)"' " ;
+    systemCmd = (std::string)"/usr/bin/codesign -f --deep -s '" + (std::string)certificatePath.c_str() + (std::string)"' " ;
     
     // Entitlements
     boost::filesystem::path entitlementsFilePath;
@@ -66,12 +66,12 @@ int codesign_app(const boost::filesystem::path &appPath, const boost::filesystem
         // if no embeded.mobileprovision then we can't do anything .. the codesign willprobably not build a good ipa, this will be more visible in 8.1.3
         
         if (copyEntitlements) {
-            entitlementsFilePath = argEntitlementsPath;
+            entitlementsFilePath = entitlementsPath;
         } else {
             std::string pathToProvision;
             
-            if (!argProvisionPath.empty()) {
-                pathToProvision = argProvisionPath.c_str();
+            if (!provisionPath.empty()) {
+                pathToProvision = provisionPath.c_str();
             } else {
                 pathToProvision = appPath.string() + "/" + "embedded.mobileprovision";
             }
@@ -91,7 +91,7 @@ int codesign_app(const boost::filesystem::path &appPath, const boost::filesystem
     // Resource rules
     std::string resRulesFile;
     if (useResourceRules) {
-        resRulesFile = argResourceRulesPath.c_str();
+        resRulesFile = resourceRulesPath.c_str();
     } else {
         resRulesFile = resource_rules_file(forceResRules, useOriginalResRules, useGenericResRules, appPath, tempDirectoryPath);
     }
@@ -104,7 +104,7 @@ int codesign_app(const boost::filesystem::path &appPath, const boost::filesystem
     systemCmd += " \"" + appPath.string() + "\"";
     
     // Codesign dylibs
-    if (codesign_at_path(appPath, argCertificatePath, entitlementsFilePath)) {
+    if (codesign_at_path(appPath, certificatePath, entitlementsFilePath)) {
         ORGLOG_V("Dylibs codesign sucessful!");
     } else {
         err = ERR_Dylib_Codesign_Failed;
@@ -114,7 +114,7 @@ int codesign_app(const boost::filesystem::path &appPath, const boost::filesystem
     // Codesigning extensions under plugins folder
     boost::filesystem::path extensionsFolderPath = appPath;
     extensionsFolderPath.append("PlugIns");
-    if (codesign_at_path(extensionsFolderPath, argCertificatePath, entitlementsFilePath)) {
+    if (codesign_at_path(extensionsFolderPath, certificatePath, entitlementsFilePath)) {
         ORGLOG_V("Extensions codesign sucessful!");
     }
     
@@ -124,7 +124,7 @@ int codesign_app(const boost::filesystem::path &appPath, const boost::filesystem
         frameworksFolderPath.append("Contents"); // os x
     }
     frameworksFolderPath.append("Frameworks");
-    if (codesign_at_path(frameworksFolderPath, argCertificatePath, entitlementsFilePath)) {
+    if (codesign_at_path(frameworksFolderPath, certificatePath, entitlementsFilePath)) {
         ORGLOG_V("Frameworks codesign sucessful!");
     }
     
